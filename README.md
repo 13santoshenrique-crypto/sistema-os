@@ -46,6 +46,28 @@ You can set repository secrets automatically by running:
 export GITHUB_TOKEN="<token>"  # personal token with repo:write permissions
 ./scripts/setup-github-secrets.sh --repo owner/repo --env .env
 ```
-This uses the `gh` tool under the hood and requires you to have it authenticated locally.
+This uses the `gh` tool under the hood and requires you to have it authenticated locally. The GitHub token used by `gh` must be a Personal Access Token with `repo` scope and `workflow` or full repo admin privileges so the script can set repository secrets.
+
+To create a GitHub Personal Access Token:
+```bash
+# 1) On GitHub: Settings > Developer Settings > Personal access tokens
+# Create a new token with scopes: "repo" and "workflow" and copy it
+export GITHUB_TOKEN="<your-personal-token>"
+gh auth login --with-token < $GITHUB_TOKEN
+```
+
+To create a Fly API token (if you want automated deployment from CI):
+```bash
+# 1) On Fly.io, create an API token in the dashboard
+export FLY_API_TOKEN="<your-fly-api-token>"
+```
+
+To set secrets and deploy once your environment is ready:
+```bash
+# ensure auth and token
+gh auth status
+./scripts/setup-github-secrets.sh --repo 13santoshenrique-crypto/sistema-os --env .env.deploy
+./scripts/fly-setup.sh --app my-sistema-os-app
+```
 4. Execute `scripts/fly-setup.sh <app-name>` para criar e deploy.
 
