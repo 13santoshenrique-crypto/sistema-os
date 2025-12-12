@@ -40,5 +40,12 @@ Deploy rápido:
 	```
 
 	If these are present in the environment, `django-storages` will be used as the `DEFAULT_FILE_STORAGE`.
+  
+You can set repository secrets automatically by running:
+```bash
+export GITHUB_TOKEN="<token>"  # personal token with repo:write permissions
+./scripts/setup-github-secrets.sh --repo owner/repo --env .env
+```
+This uses the `gh` tool under the hood and requires you to have it authenticated locally.
 4. Execute `scripts/fly-setup.sh <app-name>` para criar e deploy.
 
