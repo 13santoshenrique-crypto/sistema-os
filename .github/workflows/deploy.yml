@@ -1,0 +1,63 @@
+name: CI & Deploy (Fly.io)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        env:
+          DJANGO_SETTINGS_MODULE: setup.settings
+        run: |
+          python manage.py test --verbosity=2
+
+      - name: Set up Flyctl
+        uses: superfly/flyctl-actions@v1
+        with:
+          args: version
+
+      - name: Deploy to Fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_STORAGE_BUCKET_NAME: ${{ secrets.AWS_STORAGE_BUCKET_NAME }}
+          AWS_S3_ENDPOINT_URL: ${{ secrets.AWS_S3_ENDPOINT_URL }}
+        run: |
+          flyctl secrets set DATABASE_URL="$DATABASE_URL" --app ${{ github.repository }} || true
+          flyctl secrets set DJANGO_SECRET_KEY="$DJANGO_SECRET_KEY" --app ${{ github.repository }} || true
+          if [ -n "$SUPABASE_URL" ]; then flyctl secrets set SUPABASE_URL="$SUPABASE_URL" --app ${{ github.repository }} || true; fi
+          if [ -n "$SUPABASE_KEY" ]; then flyctl secrets set SUPABASE_KEY="$SUPABASE_KEY" --app ${{ github.repository }} || true; fi
+          flyctl deploy --config fly.toml --remote-only
+      - name: Run migrations on remote DB
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          python manage.py migrate --noinput
+      - name: Collect static (CI)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          python manage.py collectstatic --noinput

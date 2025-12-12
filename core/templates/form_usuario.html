@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">Criar Usuário</div>
+            <div class="card-body">
+                <form method="post">{% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="mb-3">
+                        <label class="form-label">Papel</label>
+                        <select class="form-select" name="role">
+                            <option value="SOLICITANTE">Solicitante</option>
+                            <option value="TECNICO">Técnico</option>
+                            <option value="PREMIUM">Premium</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary">Criar Usuário</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+    <h3><i class="bi bi-list-check"></i> Ordens de Serviço</h3>
+    <a href="/nova/" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Nova O.S.</a>
+</div>
+
+<div class="mb-3">
+    <form method="get" class="row g-2">
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">Status (Todos)</option>
+                {% for key, val in status_choices %}
+                    <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>{{ val }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="prioridade" class="form-select">
+                <option value="">Prioridade (Todas)</option>
+                {% for key, val in prioridade_choices %}
+                    <option value="{{ key }}" {% if request.GET.prioridade == key %}selected{% endif %}>{{ val }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="local" class="form-select">
+                <option value="">Local (Todos)</option>
+                {% for local in locals %}
+                    <option value="{{ local.id }}" {% if request.GET.local == local.id|stringformat:"s" %}selected{% endif %}>{{ local.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-secondary">Filtrar</button>
+        </div>
+    </form>
+</div>
+
+<div class="row">
+    {% for ordem in ordens %}
+    <div class="col-md-4 mb-4">
+        <div class="card card-os shadow-sm h-100">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <small class="text-muted">OS #{{ ordem.id }}</small>
+                
+                {% if ordem.status == 'CONCLUIDO' %}
+                    <span class="badge bg-success">Concluído</span>
+                {% elif ordem.status == 'PENDENTE' %}
+                    <span class="badge bg-warning text-dark">Pendente</span>
+                {% elif ordem.status == 'ATRASADO' %}
+                    <span class="badge bg-danger">Atrasado</span>
+                {% else %}
+                    <span class="badge bg-primary">Em Andamento</span>
+                {% endif %}
+            </div>
+            
+            <div class="card-body">
+                <h5 class="card-title text-truncate">{{ ordem.titulo }}</h5>
+                <p class="card-text text-muted small"><i class="bi bi-geo-alt"></i> {% if ordem.local %}{{ ordem.local.nome }}{% endif %}</p>
+                <p class="card-text">{{ ordem.descricao|truncatechars:80 }}</p>
+            </div>
+            
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">Prazo: {{ ordem.prazo_limite|date:"d/m/Y" }}</small>
+                    <a href="/ordem/{{ ordem.id }}/" class="btn btn-sm btn-outline-secondary">Ver Detalhes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center mt-5">
+        <div class="alert alert-light" role="alert">
+            <h4>Nenhuma ordem encontrada!</h4>
+            <p>Clique no botão acima para criar a primeira.</p>
+        </div>
+    </div>
+    {% endfor %}
+
+        <div class="col-12">
+            {% if ordens.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if ordens.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ ordens.previous_page_number }}" aria-label="Previous">
+                                &laquo;
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% for num in ordens.paginator.page_range %}
+                        {% if ordens.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if ordens.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ ordens.next_page_number }}" aria-label="Next">
+                                &raquo;
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+</div>
+{% endblock %}

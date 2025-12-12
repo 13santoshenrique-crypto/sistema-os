@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">O.S. Abertas</h5>
+                <p class="card-text display-6">{{ counts.PENDENTE }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Em Andamento</h5>
+                <p class="card-text display-6">{{ counts.EM_ANDAMENTO }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Concluídas</h5>
+                <p class="card-text display-6">{{ counts.CONCLUIDO }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title">Distribuição por Status</h5>
+                    <button id="download-status" class="btn btn-sm btn-outline-secondary">Exportar</button>
+                </div>
+                <canvas id="statusChart" height="140"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="d-flex gap-2 align-items-center">
+            <span class="me-2">Período:</span>
+            <a href="?period=7" class="btn btn-outline-secondary btn-sm {% if period == 7 %}active{% endif %}">7d</a>
+            <a href="?period=30" class="btn btn-outline-secondary btn-sm {% if period == 30 %}active{% endif %}">30d</a>
+            <a href="?period=90" class="btn btn-outline-secondary btn-sm {% if period == 90 %}active{% endif %}">90d</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h5>Tempo Gasto por Funcionário (hh:mm:ss)</h5>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Tempo Gasto</h6>
+            <button id="download-time" class="btn btn-sm btn-outline-secondary">Exportar</button>
+        </div>
+        <canvas id="timeChart" height="140"></canvas>
+        <table class="table table-sm mt-3">
+            <thead><tr><th>Técnico</th><th>Tempo Total</th></tr></thead>
+            <tbody>
+                {% for t in time_by_tech %}
+                <tr>
+                    <td>{{ t.tecnico_responsavel__username }}</td>
+                    <td>{{ t.total_duration }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2">Nenhum registro</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <h5>Quantidade de O.S. por Funcionário</h5>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Quantidade</h6>
+            <button id="download-count" class="btn btn-sm btn-outline-secondary">Exportar</button>
+        </div>
+        <canvas id="countChart" height="140"></canvas>
+        <table class="table table-sm mt-3">
+            <thead><tr><th>Técnico</th><th>Quantidade</th></tr></thead>
+            <tbody>
+                {% for c in count_by_tech %}
+                <tr>
+                    <td>{{ c.tecnico_responsavel__username }}</td>
+                    <td>{{ c.total_count }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="2">Nenhum registro</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Evolução de O.S. (por dia)</h6>
+            <a href="/dashboard/export/?type=counts&period={{ period }}" class="btn btn-sm btn-outline-secondary">Exportar CSV</a>
+        </div>
+        <canvas id="dailyCountChart" height="120"></canvas>
+    </div>
+    <div class="col-md-6">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Horas Gastas (por dia)</h6>
+            <a href="/dashboard/export/?type=time&period={{ period }}" class="btn btn-sm btn-outline-secondary">Exportar CSV</a>
+        </div>
+        <canvas id="dailyTimeChart" height="120"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const statusLabels = {{ status_labels_json|safe }};
+const statusValues = {{ status_values_json|safe }};
+const timeLabels = {{ time_labels_json|safe }};
+const timeValues = {{ time_values_json|safe }}; // hours as floats
+const countLabels = {{ count_labels_json|safe }};
+const countValues = {{ count_values_json|safe }};
+
+// Status pie chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'pie',
+    data: {
+        labels: statusLabels,
+        datasets: [{ data: statusValues, backgroundColor: ['#f3a712', '#2b7cff', '#e74c3c', '#1abc9c'] }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Status das O.S.' } }
+    }
+});
+
+// Time spent bar chart
+const timeCtx = document.getElementById('timeChart').getContext('2d');
+const timeChart = new Chart(timeCtx, {
+    type: 'bar',
+    data: { labels: timeLabels, datasets: [{ label: 'Horas', data: timeValues, backgroundColor: '#2b7cff' }] },
+    options: {
+        scales: { y: { beginAtZero: true } },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const val = parseFloat(context.raw || 0);
+                        const h = Math.floor(val);
+                        const m = Math.round((val - h) * 60);
+                        return `${h}h ${String(m).padStart(2,'0')}m`;
+                    }
+                }
+            },
+            title: { display: true, text: 'Hora(s) Gastas por Técnico' },
+            legend: { display: false }
+        }
+    }
+});
+
+// Count bar chart
+const countCtx = document.getElementById('countChart').getContext('2d');
+const countChart = new Chart(countCtx, {
+    type: 'bar',
+    data: { labels: countLabels, datasets: [{ label: 'Quantidade', data: countValues, backgroundColor: '#1abc9c' }] },
+    options: { scales: { y: { beginAtZero: true } }, plugins: { title: { display: true, text: 'Quantidade de O.S. por Técnico' }, legend: { display: false } } }
+});
+
+// Export buttons
+document.getElementById('download-time').addEventListener('click', function(){
+    const url = timeChart.toBase64Image();
+    const a = document.createElement('a'); a.href = url; a.download = 'tempo_por_tecnico.png'; a.click();
+});
+document.getElementById('download-count').addEventListener('click', function(){
+    const url = countChart.toBase64Image();
+    const a = document.createElement('a'); a.href = url; a.download = 'quantidade_por_tecnico.png'; a.click();
+});
+document.getElementById('download-status').addEventListener('click', function(){
+    const url = statusChart.toBase64Image();
+    const a = document.createElement('a'); a.href = url; a.download = 'status_os.png'; a.click();
+});
+
+// Daily charts - period data
+const dailyLabels = {{ daily_labels_json|safe }};
+const dailyCounts = {{ daily_counts_json|safe }};
+const dailyTime = {{ daily_time_json|safe }};
+
+const dailyCountCtx = document.getElementById('dailyCountChart').getContext('2d');
+const dailyCountChart = new Chart(dailyCountCtx, {
+    type: 'line',
+    data: { labels: dailyLabels, datasets: [{ label: 'O.S. por Dia', data: dailyCounts, borderColor: '#6f42c1', backgroundColor: 'rgba(111,66,193,0.08)', tension: 0.3 }] },
+    options: { plugins: { title: { display: false } }, scales: { y: { beginAtZero: true } }, animation: { duration: 800 } }
+});
+
+const dailyTimeCtx = document.getElementById('dailyTimeChart').getContext('2d');
+const dailyTimeChart = new Chart(dailyTimeCtx, {
+    type: 'line',
+    data: { labels: dailyLabels, datasets: [{ label: 'Horas por Dia', data: dailyTime, borderColor: '#2b7cff', backgroundColor: 'rgba(43,124,255,0.08)', tension: 0.3 }] },
+    options: { plugins: { title: { display: false } }, scales: { y: { beginAtZero: true } }, animation: { duration: 800 } }
+});
+</script>
+{% endblock %}

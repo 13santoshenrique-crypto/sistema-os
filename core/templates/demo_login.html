@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card mx-auto" style="max-width:720px;">
+  <div class="card-body">
+    <h3 class="card-title">Login Demo</h3>
+    <p class="card-text">Use as credenciais abaixo para testes rápidos em ambiente de desenvolvimento.</p>
+    <ul>
+      <li><strong>gerente</strong> / secret (superuser)</li>
+      <li><strong>premium</strong> / secret (premium)</li>
+      <li><strong>sol1</strong> / secret (solicitante)</li>
+      <li><strong>tech2</strong> / secret (técnico)</li>
+    </ul>
+    <div class="d-flex gap-2">
+      <form method="post" action="" class="m-0">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="gerente">
+        <button class="btn btn-primary" type="submit">Entrar como Gerente</button>
+      </form>
+      <form method="post" action="" class="m-0">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="premium">
+        <button class="btn btn-outline-primary" type="submit">Entrar como Premium</button>
+      </form>
+      <form method="post" action="" class="m-0">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="solicitante">
+        <button class="btn btn-outline-secondary" type="submit">Entrar como Solicitante</button>
+      </form>
+      <form method="post" action="" class="m-0">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="tecnico">
+        <button class="btn btn-outline-success" type="submit">Entrar como Técnico</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

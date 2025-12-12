@@ -1,0 +1,26 @@
+[app]
+# name = "sistema-os" # Uncomment and rename if you want a fixed app name
+
+[build]
+  # By default Fly will build the Dockerfile in the repo
+  image = ""
+
+[env]
+  PORT = "8000"
+  DEBUG = "False"
+
+[[services]]
+  internal_port = 8000
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+
+  [[services.ports]]
+    port = 443
+  [[services.http_checks]]
+    path = "/health"
+    interval = 10000
+    timeout = 2000
+    grace_period = 60000
+    method = "get"
