@@ -1,0 +1,20 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+db.sqlite3
+media/
+staticfiles/
+node_modules/
+dist/
+build/
+*.egg-info
+*.log
+Dockerfile
+fly.toml
+.git
+.github/
+*** End Patch

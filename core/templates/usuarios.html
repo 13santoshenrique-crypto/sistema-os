@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-3 d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">Gerenciar Usuários e Técnicos</h3>
+        <div>
+            <a class="btn btn-primary me-2" href="/criar-usuario/">Criar Usuário</a>
+            <a class="btn btn-outline-secondary" href="/locais/">Gerenciar Locais</a>
+        </div>
+    </div>
+
+    <div class="col-md-12 mb-3">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Técnicos</h5>
+                <input id="searchTech" class="form-control form-control-sm w-auto" placeholder="Buscar técnico" />
+            </div>
+            <div class="row mt-3" id="techGrid">
+                {% for t in tecnicos %}
+                <div class="col-md-4 mb-3 tech-card" data-username="{{ t.user.username|lower }}">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex gap-3 align-items-center">
+                            <div class="avatar rounded-circle bg-secondary d-flex justify-content-center align-items-center" style="width:48px;height:48px;color:#fff;font-weight:600">
+                                {{ t.user.username|slice:":1"|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">{{ t.user.username }}</div>
+                                        <div class="text-muted small">{{ t.user.email }}</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="badge bg-info text-dark">{{ t.os_count }} O.S.</div>
+                                        <div class="text-muted small">{{ t.hours_str }}</div>
+                                    </div>
+                                </div>
+                                <div class="mt-2 d-flex gap-2">
+                                    <a class="btn btn-sm btn-outline-primary" href="/?tech={{ t.user.id }}">Ver Ordens</a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="/editar-usuario/{{ t.user.id }}/">Editar</a>
+                                    <a class="btn btn-sm btn-danger" href="/remover-usuario/{{ t.user.id }}/">Remover</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-md-12 text-muted">Nenhum técnico cadastrado ainda.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12">
+        <h4>Todos os Usuários</h4>
+        <ul class="list-group">
+            {% for u in users %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fw-bold">{{ u.username }}</span> <small class="text-muted">{{ u.email }}</small>
+                    <div class="small text-muted">{{ u.profile.get_role_display }}</div>
+                </div>
+                <span>
+                    <a href="/remover-usuario/{{ u.id }}/" class="btn btn-sm btn-danger">Remover</a>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    const search = document.getElementById('searchTech');
+    const grid = document.getElementById('techGrid');
+    search.addEventListener('input', function(){
+        const q = this.value.trim().toLowerCase();
+        document.querySelectorAll('.tech-card').forEach(function(card){
+            const uname = card.getAttribute('data-username');
+            if(!q || uname.includes(q)) card.style.display = 'block'; else card.style.display = 'none';
+        });
+    });
+});
+</script>
+{% endblock %}
