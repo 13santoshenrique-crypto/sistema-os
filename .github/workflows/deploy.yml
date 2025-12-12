@@ -49,3 +49,15 @@ jobs:
           if [ -n "$SUPABASE_URL" ]; then flyctl secrets set SUPABASE_URL="$SUPABASE_URL" --app ${{ github.repository }} || true; fi
           if [ -n "$SUPABASE_KEY" ]; then flyctl secrets set SUPABASE_KEY="$SUPABASE_KEY" --app ${{ github.repository }} || true; fi
           flyctl deploy --config fly.toml --remote-only
+      - name: Run migrations on remote DB
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          python manage.py migrate --noinput
+      - name: Collect static (CI)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          python manage.py collectstatic --noinput
