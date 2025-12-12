@@ -6,10 +6,17 @@ if ! command -v flyctl >/dev/null 2>&1; then
   exit 1
 fi
 
-APP_NAME=${1:-}
-if [ -z "$APP_NAME" ]; then
-  read -p "Fly app name (leave empty to auto-generate): " APP_NAME
-fi
+APP_NAME=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --app)
+      APP_NAME="$2"; shift 2;;
+    -h|--help)
+      echo "Usage: $0 [--app app-name]"; exit 0;;
+    *)
+      echo "Unknown option: $1"; exit 1;;
+  esac
+done
 
 echo "Launching Fly app..."
 if [ -n "$APP_NAME" ]; then
@@ -20,20 +27,21 @@ else
 fi
 
 echo "Setting secrets..."
+# Set common secrets if present in environment
 if [ -n "$DATABASE_URL" ]; then
-  flyctl secrets set DATABASE_URL="$DATABASE_URL"
+  flyctl secrets set DATABASE_URL="$DATABASE_URL" --app ${APP_NAME:-$(flyctl info --format json 2>/dev/null | jq -r .Name || echo '')} || true
 fi
 if [ -n "$DJANGO_SECRET_KEY" ]; then
-  flyctl secrets set DJANGO_SECRET_KEY="$DJANGO_SECRET_KEY"
+  flyctl secrets set DJANGO_SECRET_KEY="$DJANGO_SECRET_KEY" --app ${APP_NAME:-$(flyctl info --format json 2>/dev/null | jq -r .Name || echo '')} || true
 fi
 if [ -n "$SUPABASE_URL" ]; then
-  flyctl secrets set SUPABASE_URL="$SUPABASE_URL"
+  flyctl secrets set SUPABASE_URL="$SUPABASE_URL" --app ${APP_NAME:-$(flyctl info --format json 2>/dev/null | jq -r .Name || echo '')} || true
 fi
 if [ -n "$SUPABASE_KEY" ]; then
-  flyctl secrets set SUPABASE_KEY="$SUPABASE_KEY"
+  flyctl secrets set SUPABASE_KEY="$SUPABASE_KEY" --app ${APP_NAME:-$(flyctl info --format json 2>/dev/null | jq -r .Name || echo '')} || true
 fi
 
 echo "Deploying..."
-flyctl deploy
+flyctl deploy --app ${APP_NAME:-} || true
 
 echo "Done. Remember to set any other secrets (AWS_* or storage parameters) if needed."
