@@ -14,6 +14,7 @@ from django.contrib.auth import get_user_model
 from django.http import HttpResponseForbidden
 from django.conf import settings
 from django.contrib.auth import authenticate, login
+from django.http import JsonResponse
 
 # 1. Lista todas as ordens (Home)
 @login_required
@@ -253,6 +254,11 @@ def demo_login(request):
             return redirect('/dashboard/')
 
     return render(request, 'demo_login.html')
+
+
+def health(request):
+    # lightweight health check for load balancers
+    return JsonResponse({'status': 'ok'})
 
 
 @login_required

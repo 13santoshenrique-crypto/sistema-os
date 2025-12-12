@@ -4,7 +4,7 @@ from core.views import lista_ordens, detalhe_ordem, nova_ordem, editar_ordem
 from core.views import executar_ordem
 from core.views import locais, criar_usuario
 from core.views import remover_usuario
-from core.views import usuarios, dashboard, dashboard_export, demo_login
+from core.views import usuarios, dashboard, dashboard_export, demo_login, health
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -20,4 +20,5 @@ urlpatterns = [
     path('dashboard/', dashboard, name='dashboard'),
     path('dashboard/export/', dashboard_export, name='dashboard_export'),
     path('demo-login/', demo_login, name='demo_login'),
+    path('health/', health, name='health'),
 ]
